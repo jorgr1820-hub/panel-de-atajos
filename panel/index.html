@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Atajos">
+<meta name="referrer" content="no-referrer">
+<title>Panel de atajos</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: #111; color: #eee;
+    font-family: -apple-system, Helvetica, sans-serif; -webkit-user-select: none; }
+  body { display: flex; flex-direction: column; padding: 16px; }
+  header { display: flex; justify-content: space-between; align-items: center;
+    font-size: 15px; color: #888; margin-bottom: 12px; }
+  #estado { min-height: 1em; }
+  #estado.aviso { color: #f5a524; }
+  #cambiarClave { background: none; border: 1px solid #444; color: #888;
+    border-radius: 8px; padding: 6px 10px; font-size: 14px; }
+  .grid { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 1fr; gap: 14px; }
+  .btn { border: none; border-radius: 20px; color: #fff; font-size: 22px;
+    font-weight: 600; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; touch-action: manipulation; transition: transform .08s, opacity .08s; }
+  .btn span { font-size: 46px; line-height: 1; margin-bottom: 10px; }
+  .btn:active, .btn.pulsado { transform: scale(.95); opacity: .7; }
+  .btn.error { background: #a33 !important; }
+  .texto { background: #2b4c7e; }
+  .musica { background: #2d6a4f; }
+  .app { background: #7a5c1e; }
+  .enter { background: #5a3d7a; }
+  #clavePantalla { position: fixed; top: 0; right: 0; bottom: 0; left: 0; background: #111;
+    display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+  #clavePantalla p { color: #888; font-size: 16px; text-align: center; max-width: 520px; }
+  #claveInput { font-size: 30px; width: 520px; max-width: 100%; text-align: center; padding: 12px;
+    border-radius: 12px; border: 1px solid #444; background: #222; color: #fff;
+    letter-spacing: 2px; margin: 16px 0; font-family: Menlo, monospace; text-transform: uppercase; }
+  #claveGuardar { font-size: 22px; padding: 14px 40px; border-radius: 12px;
+    border: none; background: #2b4c7e; color: #fff; }
+</style>
+</head>
+<body>
+<header>
+  <div id="estado">Conectando…</div>
+  <button id="cambiarClave">Cambiar clave</button>
+</header>
+
+<div class="grid">
+  <button class="btn texto" data-accion="copiar"><span>📋</span>Copiar</button>
+  <button class="btn texto" data-accion="pegar"><span>📥</span>Pegar</button>
+  <button class="btn texto" data-accion="seleccionar"><span>🔲</span>Seleccionar todo</button>
+
+  <button class="btn musica" data-accion="musica"><span>🎵</span>Abrir música</button>
+  <button class="btn musica" data-accion="playpausa"><span>⏯️</span>Play / Pausa</button>
+  <button class="btn musica" data-accion="siguiente"><span>⏭️</span>Siguiente</button>
+
+  <button class="btn app" data-accion="notas"><span>📝</span>Abrir Notas</button>
+  <button class="btn musica" data-accion="anterior"><span>⏮️</span>Anterior</button>
+  <button class="btn enter" data-accion="enter"><span>⏎</span>Enter</button>
+</div>
+
+<div id="clavePantalla">
+  <div style="font-size:24px">Clave del panel</div>
+  <p>En la Mac abre la app Panel de atajos → Nueva conexión, y escanea el código con la cámara o escribe aquí la clave. Se hace una sola vez.</p>
+  <input id="claveInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="characters"
+         spellcheck="false" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" maxlength="40">
+  <button id="claveGuardar">Entrar</button>
+</div>
+
+<script src="/firma.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

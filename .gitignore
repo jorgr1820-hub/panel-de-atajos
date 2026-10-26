@@ -1,0 +1,8 @@
+# La app es un resultado de compilar: se regenera con app/compilar.sh
+Panel de atajos.app/
+.DS_Store
+# Nunca deben existir aquí, pero por si acaso
+*.pem
+*.key
+config.json
+panel.pid
