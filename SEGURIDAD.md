@@ -31,6 +31,13 @@ que se diseñó pensando en cómo lo atacaría alguien.
 - **Las firmas son ad‑hoc.** Cada vez que se recompila, macOS pide de nuevo el permiso de Accesibilidad y el acceso al Llavero. Eso es intencional: un binario distinto no hereda los permisos.
 - **iOS 12 no permite guardar la clave fuera del almacenamiento del navegador** del iPad. Si borras los datos de Safari, hay que emparejar de nuevo.
 
+## Reportar una vulnerabilidad
+
+Si encuentras un problema de seguridad, **no abras un issue público**. Usa
+[*Report a vulnerability*](https://github.com/jorgr1820-hub/panel-de-atajos/security/advisories/new)
+en la pestaña *Security* del repositorio. Incluye los pasos para reproducirlo y
+el impacto que esperas.
+
 ## Recomendaciones
 
 1. Activa el firewall de macOS (Ajustes del Sistema → Red → Firewall).
