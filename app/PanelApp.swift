@@ -15,6 +15,7 @@ import CoreImage.CIFilterBuiltins
 import CryptoKit
 import LocalAuthentication
 import Security
+import ServiceManagement
 import SwiftUI
 import SystemConfiguration
 
@@ -295,6 +296,7 @@ final class Panel: ObservableObject {
     @Published var aviso: String?
     @Published var avisoCA: String?
     @Published var secretos = Secretos()
+    @Published var inicio = SMAppService.mainApp.status
 
     private var proceso: Process?
     private var token = ""
@@ -312,9 +314,22 @@ final class Panel: ObservableObject {
         Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { _ in
             Task { @MainActor in await Panel.shared.actualizar() }
         }
+        Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
+            Task { @MainActor in Panel.shared.revisarRed() }
+        }
         Timer.scheduledTimer(withTimeInterval: 6 * 3600, repeats: true) { _ in
             Task { @MainActor in Panel.shared.revisarCertificados() }
         }
+    }
+
+    /// Abrir la app al iniciar sesión (Ajustes del Sistema → General → Ítems de inicio).
+    func cambiarInicio(_ activar: Bool) {
+        do {
+            if activar { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+        } catch {
+            aviso = "No se pudo cambiar el arranque automático: \(error.localizedDescription)"
+        }
+        inicio = SMAppService.mainApp.status
     }
 
     /// Versiones anteriores guardaban las claves en config.json: se pasan al
@@ -381,8 +396,18 @@ final class Panel: ObservableObject {
     /// certificado sin esperar a que alguien lo reinicie.
     func revisarCertificados() {
         guard encendido, let t = secretos.tls else { return }
-        if Certificados.vence(t.cert, enDias: 60) || Certificados.vence(t.caCert, enDias: 60)
-            || t.nombres != Certificados.nombresLocales() {
+        if Certificados.vence(t.cert, enDias: 60) || Certificados.vence(t.caCert, enDias: 60) {
+            reiniciar()
+        }
+    }
+
+    /// Cada 30 s: si la Mac cambió de red o de IP (por ejemplo, al iniciar sesión
+    /// el Wi-Fi se conecta después de que la app arrancó), el certificado debe
+    /// incluir la IP nueva o los dispositivos no podrán conectarse.
+    func revisarRed() {
+        guard encendido, let t = secretos.tls else { return }
+        let actuales = Certificados.nombresLocales()
+        if actuales != t.nombres && actuales.contains(where: { $0.hasPrefix("IP:") }) {
             reiniciar()
         }
     }
@@ -477,6 +502,7 @@ final class Panel: ObservableObject {
 
     func actualizar() async {
         permisoApp = AXIsProcessTrusted()
+        inicio = SMAppService.mainApp.status
         guard encendido else { return }
         if let d = try? await pedir("GET", "/estado"), let e = try? JSONDecoder().decode(Estado.self, from: d) {
             estado = e
@@ -661,6 +687,15 @@ struct VentanaPrincipal: View {
             Button { pidiendoNombre = true } label: { Label("Nueva conexión…", systemImage: "plus.circle") }
                 .disabled(!panel.encendido)
             Spacer()
+            VStack(alignment: .trailing, spacing: 2) {
+                Toggle("Abrir al iniciar sesión", isOn: Binding(get: { panel.inicio == .enabled },
+                                                                set: { panel.cambiarInicio($0) }))
+                    .toggleStyle(.switch).controlSize(.regular)
+                if panel.inicio == .requiresApproval {
+                    Button("Falta aprobarlo en Ajustes") { SMAppService.openSystemSettingsLoginItems() }
+                        .buttonStyle(.link).font(.caption)
+                }
+            }
         }
         .controlSize(.large)
     }
@@ -845,6 +880,18 @@ struct MenuBarra: View {
 
 final class Delegado: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    /// Al iniciar sesión la app arranca en silencio: solo el ícono ⌨️ de la barra
+    /// de menú, sin abrir la ventana.
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        let evento = NSAppleEventManager.shared().currentAppleEvent
+        let comoInicio = evento?.eventID == AEEventID(kAEOpenApplication)
+            && evento?.paramDescriptor(forKeyword: AEKeyword(keyAEPropData))?.enumCodeValue == OSType(keyAELaunchedAsLogInItem)
+        guard comoInicio else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            NSApp.windows.filter { $0.title == "Panel de atajos" }.forEach { $0.close() }
+        }
+    }
 
     func applicationWillTerminate(_ notification: Notification) {
         MainActor.assumeIsolated { Panel.shared.apagarYEsperar() }

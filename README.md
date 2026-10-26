@@ -13,6 +13,10 @@ por dispositivo. Los detalles de seguridad están en [SEGURIDAD.md](SEGURIDAD.md
   certificado (`http://IP-de-la-Mac:8788`) → escanea el código QR.
 - **Ver de nuevo la clave o cambiarla:** *Mostrar código* / *Nueva clave* (piden Touch ID).
 - **Quitar el acceso a un dispositivo:** *Revocar*.
+- **Arranque automático:** interruptor *Abrir al iniciar sesión*. Al iniciar
+  sesión la app arranca en silencio (solo el ícono ⌨️ de la barra de menú) y
+  enciende el panel. Si cambia la red o la IP, renueva el certificado sola en
+  menos de un minuto.
 
 ## Estructura
 
