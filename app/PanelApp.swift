@@ -18,6 +18,7 @@ import Security
 import ServiceManagement
 import SwiftUI
 import SystemConfiguration
+import UniformTypeIdentifiers
 
 let carpetaServidor = Bundle.main.resourceURL!.appendingPathComponent("panel")
 let carpetaVieja = FileManager.default.homeDirectoryForCurrentUser
@@ -93,6 +94,9 @@ struct Icono: Identifiable {
 
 let iconos: [Icono] = [
     Icono(id: "teclado", nombre: "Teclado", encendido: "keyboard.fill", apagado: "keyboard"),
+    Icono(id: "23", nombre: "23 en círculo", encendido: "23.circle.fill", apagado: "23.circle"),
+    Icono(id: "23cuadro", nombre: "23 en cuadro", encendido: "23.square.fill", apagado: "23.square"),
+    Icono(id: "balon", nombre: "Balón de básquet", encendido: "basketball.fill", apagado: "basketball"),
     Icono(id: "botones", nombre: "Cuadrícula de botones", encendido: "square.grid.3x3.fill", apagado: "square.grid.3x3"),
     Icono(id: "toque", nombre: "Mano tocando", encendido: "hand.tap.fill", apagado: "hand.tap"),
     Icono(id: "comando", nombre: "Comando ⌘", encendido: "command.circle.fill", apagado: "command.circle"),
@@ -102,7 +106,45 @@ let iconos: [Icono] = [
     Icono(id: "ipad", nombre: "iPad", encendido: "ipad.landscape.badge.play", apagado: "ipad.landscape"),
 ]
 
-func icono(_ id: String) -> Icono { iconos.first { $0.id == id } ?? iconos[0] }
+let carpetaPreferencias = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+    .appendingPathComponent("Panel de atajos")
+
+/// Imagen propia para la barra de menú. Se usa como plantilla: macOS la pinta en
+/// blanco o negro según el tema, así que debe ser una silueta con fondo transparente.
+func cargarIcono(_ ruta: String) -> NSImage? {
+    guard !ruta.isEmpty, let img = NSImage(contentsOfFile: ruta), img.size.height > 0 else { return nil }
+    let alto: CGFloat = 18
+    img.size = NSSize(width: alto * img.size.width / img.size.height, height: alto)
+    img.isTemplate = true
+    return img
+}
+
+/// Copia la imagen elegida a la carpeta de la app (así sigue funcionando aunque
+/// se borre o mueva el original) y devuelve su nueva ruta.
+@MainActor func elegirImagenIcono() -> String? {
+    let p = NSOpenPanel()
+    p.allowedContentTypes = [.png, .pdf, .jpeg, .tiff, .heic]
+    p.message = "Elige una silueta con fondo transparente (PNG o PDF funcionan mejor)"
+    guard p.runModal() == .OK, let origen = p.url else { return nil }
+    try? FileManager.default.createDirectory(at: carpetaPreferencias, withIntermediateDirectories: true)
+    let destino = carpetaPreferencias.appendingPathComponent("icono-barra." + origen.pathExtension.lowercased())
+    try? FileManager.default.removeItem(at: destino)
+    guard (try? FileManager.default.copyItem(at: origen, to: destino)) != nil, cargarIcono(destino.path) != nil else { return nil }
+    return destino.path
+}
+
+func existeSimbolo(_ nombre: String) -> Bool {
+    !nombre.isEmpty && NSImage(systemSymbolName: nombre, accessibilityDescription: nil) != nil
+}
+
+/// "personalizado" usa el símbolo SF que escriba el usuario (el mismo encendido y apagado).
+func icono(_ id: String, personal: String = "") -> Icono {
+    if id == "personalizado" {
+        let n = personal.trimmingCharacters(in: .whitespaces)
+        if existeSimbolo(n) { return Icono(id: id, nombre: "Personalizado", encendido: n, apagado: n) }
+    }
+    return iconos.first { $0.id == id } ?? iconos[0]
+}
 
 // MARK: - Llavero
 
@@ -628,6 +670,8 @@ struct VentanaPrincipal: View {
     @State private var porRevocar: EstadoDispositivo?
     @State private var confirmarCertificado = false
     @AppStorage("icono") private var iconoID = "teclado"
+    @AppStorage("iconoPersonal") private var iconoPersonal = ""
+    @AppStorage("iconoImagen") private var iconoImagen = ""
 
     var body: some View {
         ScrollView {
@@ -722,8 +766,30 @@ struct VentanaPrincipal: View {
                     ForEach(iconos) { i in
                         Label(i.nombre, systemImage: i.encendido).tag(i.id)
                     }
+                    Divider()
+                    Label("Personalizado…", systemImage: "pencil").tag("personalizado")
+                    Label("Imagen propia…", systemImage: "photo").tag("imagen")
                 }
                 .pickerStyle(.menu).controlSize(.regular).fixedSize()
+                if iconoID == "personalizado" {
+                    HStack(spacing: 6) {
+                        TextField("nombre del símbolo SF", text: $iconoPersonal)
+                            .textFieldStyle(.roundedBorder).frame(width: 190).controlSize(.regular)
+                        Image(systemName: existeSimbolo(iconoPersonal) ? "checkmark.circle.fill" : "xmark.circle")
+                            .foregroundStyle(existeSimbolo(iconoPersonal) ? .green : .secondary)
+                    }
+                    Text("Ejemplos: figure.basketball, flame.fill, star.fill").font(.caption2).foregroundStyle(.secondary)
+                }
+                if iconoID == "imagen" {
+                    HStack(spacing: 6) {
+                        if let img = cargarIcono(iconoImagen) { Image(nsImage: img) }
+                        Button(cargarIcono(iconoImagen) == nil ? "Elegir imagen…" : "Cambiar imagen…") {
+                            if let ruta = elegirImagenIcono() { iconoImagen = ruta }
+                        }
+                        .controlSize(.regular)
+                    }
+                    Text("Silueta con fondo transparente").font(.caption2).foregroundStyle(.secondary)
+                }
             }
         }
         .controlSize(.large)
@@ -932,6 +998,8 @@ struct PanelDeAtajos: App {
     @NSApplicationDelegateAdaptor(Delegado.self) var delegado
     @ObservedObject var panel = Panel.shared
     @AppStorage("icono") private var iconoID = "teclado"
+    @AppStorage("iconoPersonal") private var iconoPersonal = ""
+    @AppStorage("iconoImagen") private var iconoImagen = ""
 
     var body: some Scene {
         Window("Panel de atajos", id: "principal") { VentanaPrincipal() }
@@ -939,7 +1007,13 @@ struct PanelDeAtajos: App {
         MenuBarExtra {
             MenuBarra()
         } label: {
-            Image(systemName: panel.encendido ? icono(iconoID).encendido : icono(iconoID).apagado)
+            if iconoID == "imagen", let img = cargarIcono(iconoImagen) {
+                // Con imagen propia, apagado se muestra atenuado.
+                Image(nsImage: img).opacity(panel.encendido ? 1 : 0.4)
+            } else {
+                let i = icono(iconoID, personal: iconoPersonal)
+                Image(systemName: panel.encendido ? i.encendido : i.apagado)
+            }
         }
     }
 }
