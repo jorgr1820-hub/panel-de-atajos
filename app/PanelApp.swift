@@ -82,6 +82,28 @@ struct Revelado: Identifiable {
     let url: String
 }
 
+// MARK: - Ícono de la barra de menú
+
+struct Icono: Identifiable {
+    let id: String
+    let nombre: String
+    let encendido: String  // símbolo SF con el panel encendido
+    let apagado: String    // y apagado
+}
+
+let iconos: [Icono] = [
+    Icono(id: "teclado", nombre: "Teclado", encendido: "keyboard.fill", apagado: "keyboard"),
+    Icono(id: "botones", nombre: "Cuadrícula de botones", encendido: "square.grid.3x3.fill", apagado: "square.grid.3x3"),
+    Icono(id: "toque", nombre: "Mano tocando", encendido: "hand.tap.fill", apagado: "hand.tap"),
+    Icono(id: "comando", nombre: "Comando ⌘", encendido: "command.circle.fill", apagado: "command.circle"),
+    Icono(id: "rayo", nombre: "Rayo", encendido: "bolt.circle.fill", apagado: "bolt.circle"),
+    Icono(id: "antena", nombre: "Antena", encendido: "antenna.radiowaves.left.and.right",
+          apagado: "antenna.radiowaves.left.and.right.slash"),
+    Icono(id: "ipad", nombre: "iPad", encendido: "ipad.landscape.badge.play", apagado: "ipad.landscape"),
+]
+
+func icono(_ id: String) -> Icono { iconos.first { $0.id == id } ?? iconos[0] }
+
 // MARK: - Llavero
 
 enum Llavero {
@@ -605,6 +627,7 @@ struct VentanaPrincipal: View {
     @State private var mostrar: Revelado?
     @State private var porRevocar: EstadoDispositivo?
     @State private var confirmarCertificado = false
+    @AppStorage("icono") private var iconoID = "teclado"
 
     var body: some View {
         ScrollView {
@@ -695,6 +718,12 @@ struct VentanaPrincipal: View {
                     Button("Falta aprobarlo en Ajustes") { SMAppService.openSystemSettingsLoginItems() }
                         .buttonStyle(.link).font(.caption)
                 }
+                Picker("Ícono de la barra", selection: $iconoID) {
+                    ForEach(iconos) { i in
+                        Label(i.nombre, systemImage: i.encendido).tag(i.id)
+                    }
+                }
+                .pickerStyle(.menu).controlSize(.regular).fixedSize()
             }
         }
         .controlSize(.large)
@@ -902,6 +931,7 @@ final class Delegado: NSObject, NSApplicationDelegate {
 struct PanelDeAtajos: App {
     @NSApplicationDelegateAdaptor(Delegado.self) var delegado
     @ObservedObject var panel = Panel.shared
+    @AppStorage("icono") private var iconoID = "teclado"
 
     var body: some Scene {
         Window("Panel de atajos", id: "principal") { VentanaPrincipal() }
@@ -909,7 +939,7 @@ struct PanelDeAtajos: App {
         MenuBarExtra {
             MenuBarra()
         } label: {
-            Image(systemName: panel.encendido ? "keyboard.fill" : "keyboard")
+            Image(systemName: panel.encendido ? icono(iconoID).encendido : icono(iconoID).apagado)
         }
     }
 }
