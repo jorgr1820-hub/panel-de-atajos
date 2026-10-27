@@ -1,0 +1,24 @@
+name: Mejora
+description: Propón una función o mejora
+labels: [mejora]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: Problema o necesidad
+      description: Qué quieres lograr y por qué. Describe el problema, no solo la solución.
+    validations:
+      required: true
+  - type: textarea
+    id: propuesta
+    attributes:
+      label: Propuesta
+  - type: textarea
+    id: seguridad
+    attributes:
+      label: Impacto en seguridad
+      description: ¿Añade acciones, abre puertos, guarda datos o amplía quién puede acceder?
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Alternativas consideradas

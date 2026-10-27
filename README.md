@@ -1,5 +1,8 @@
 # Panel de atajos
 
+[![CI](https://github.com/jorgr1820-hub/panel-de-atajos/actions/workflows/ci.yml/badge.svg)](https://github.com/jorgr1820-hub/panel-de-atajos/actions/workflows/ci.yml)
+[![Versión](https://img.shields.io/github/v/release/jorgr1820-hub/panel-de-atajos?label=versi%C3%B3n)](https://github.com/jorgr1820-hub/panel-de-atajos/releases)
+
 Convierte un iPad (u otro dispositivo con Safari) en un panel de botones que
 controla tu Mac por la red local: copiar, pegar, seleccionar todo, Enter, abrir
 Notas y controlar la música.
@@ -107,9 +110,16 @@ Detalle completo, referencia de la API y cómo agregar endpoints:
 │   ├── app.js             Lógica del cliente (ES5, compatible con iOS 12)
 │   └── firma.js           HMAC-SHA256 en JavaScript puro
 ├── docs/
-│   └── ARQUITECTURA.md    Diseño, protocolo y referencia de la API
-├── pruebas.sh             Pruebas de seguridad
+│   ├── ARQUITECTURA.md    Diseño, protocolo y referencia de la API
+│   ├── ROADMAP.md         Plan de versiones
+│   ├── adr/               Registros de decisiones de arquitectura
+│   └── rfc/               Análisis de decisiones grandes
+├── tests/                 Pruebas unitarias (se ejecutan en la CI)
+├── .github/               CI, Dependabot y plantillas de PR e issues
+├── pruebas.sh             Pruebas de seguridad contra el panel en marcha
+├── VERSION                Versión actual (única fuente)
 ├── SEGURIDAD.md           Modelo de amenazas y límites conocidos
+├── CONTRIBUTING.md        Flujo de trabajo, versionado y releases
 └── CHANGELOG.md           Historial de cambios
 ```
 
@@ -150,7 +160,14 @@ firma de Apple Developer ID eliminaría esta fricción.
 
 ### Pruebas
 
-Con el panel encendido:
+Pruebas unitarias (no necesitan el panel encendido; la CI las ejecuta en cada
+cambio):
+
+```bash
+/usr/bin/python3 -m unittest discover -s tests -v
+```
+
+Pruebas de seguridad contra el panel en marcha:
 
 ```bash
 ./pruebas.sh
@@ -172,7 +189,9 @@ Resumen del modelo de amenazas (completo en **[SEGURIDAD.md](SEGURIDAD.md)**):
   los botones; en redes ajenas un tercero puede provocar un bloqueo temporal;
   malware con control total de la cuenta de usuario.
 
-**No abras estos puertos en tu router.** Para acceso remoto usa una VPN.
+**No abras estos puertos en tu router.** El acceso desde internet está
+planificado mediante una red privada superpuesta; el análisis completo está en
+el [RFC 0001](docs/rfc/0001-acceso-por-internet.md).
 
 ## Mantenimiento
 
@@ -194,6 +213,13 @@ Resumen del modelo de amenazas (completo en **[SEGURIDAD.md](SEGURIDAD.md)**):
 | No aparece el interruptor de confianza del certificado | El perfil no está instalado | *Ajustes → General → Perfiles* → instalar |
 | "Clave incorrecta" | Clave rotada o revocada | *Mostrar código* y volver a emparejar |
 | "Demasiados intentos" | Bloqueo por fallos | Espera 5 minutos |
+
+## Contribuir y versiones
+
+- Flujo de trabajo, commits y releases: [CONTRIBUTING.md](CONTRIBUTING.md).
+- Decisiones de diseño y su justificación: [docs/adr/](docs/adr/).
+- Próximas versiones: [docs/ROADMAP.md](docs/ROADMAP.md).
+- Cambios por versión: [CHANGELOG.md](CHANGELOG.md).
 
 ## Licencia
 
