@@ -1,0 +1,9 @@
+# Propone actualizaciones de las acciones de GitHub fijadas por commit.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
