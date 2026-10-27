@@ -44,10 +44,10 @@ jobs:
       - name: Buscar secretos en el repositorio
         run: |
           # Claves privadas, certificados o claves de dispositivo reales no deben versionarse.
-          # tests/ contiene claves de prueba ficticias y se excluye; "XXXXX-…" es el
-          # texto de ejemplo del campo de la clave.
+          # Se excluyen: tests/ (claves de prueba ficticias), la documentación, este
+          # workflow (contiene los propios patrones) y el texto de ejemplo "XXXXX-…".
           hallazgos=$(git grep -nIE 'BEGIN (EC |RSA |OPENSSH )?PRIVATE KEY|BEGIN CERTIFICATE|[A-HJ-NP-Z2-9]{5}-[A-HJ-NP-Z2-9]{5}-[A-HJ-NP-Z2-9]{5}-[A-HJ-NP-Z2-9]{5}' \
-                      -- . ':!tests/' ':!*.md' | grep -v 'XXXXX-XXXXX' || true)
+                      -- . ':!tests/' ':!*.md' ':!.github/workflows/' | grep -v 'XXXXX-XXXXX' || true)
           if [ -n "$hallazgos" ]; then
             echo "$hallazgos"
             echo "::error::Posible secreto en el repositorio"
