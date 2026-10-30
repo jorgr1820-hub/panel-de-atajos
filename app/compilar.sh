@@ -23,8 +23,8 @@ cat > "$APP/Contents/Info.plist" <<'EOF'
   <key>CFBundleIdentifier</key><string>local.jordan.panel-de-atajos</string>
   <key>CFBundleExecutable</key><string>PanelDeAtajos</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleVersion</key><string>3.0</string>
-  <key>CFBundleShortVersionString</key><string>3.0</string>
+  <key>CFBundleVersion</key><string>0</string>
+  <key>CFBundleShortVersionString</key><string>0</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>NSHighResolutionCapable</key><true/>
   <key>NSAppleEventsUsageDescription</key><string>Para enviar las teclas y controlar la música desde tus dispositivos.</string>
@@ -33,6 +33,11 @@ cat > "$APP/Contents/Info.plist" <<'EOF'
 </dict>
 </plist>
 EOF
+
+# La versión sale del archivo VERSION (única fuente de verdad, ver CONTRIBUTING.md).
+VERSION=$(tr -d '[:space:]' < VERSION)
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" \
+                        -c "Set :CFBundleVersion $VERSION" "$APP/Contents/Info.plist"
 
 HUELLAS="$(mktemp -d)/Huellas.swift"
 {
@@ -51,4 +56,4 @@ rm -rf "$(dirname "$HUELLAS")"
 
 codesign --force -s - --identifier local.jordan.panel-de-atajos "$APP"
 codesign -v "$APP"
-echo "Listo: $APP"
+echo "Listo: $APP $VERSION"

@@ -1,0 +1,39 @@
+name: Error
+description: Algo no funciona como debería
+labels: [error]
+body:
+  - type: markdown
+    attributes:
+      value: "**¿Es un problema de seguridad?** No lo publiques aquí: usa *Report a vulnerability* en la pestaña Security."
+  - type: textarea
+    id: que-paso
+    attributes:
+      label: Qué pasó
+      description: Qué esperabas y qué ocurrió.
+    validations:
+      required: true
+  - type: textarea
+    id: pasos
+    attributes:
+      label: Pasos para reproducirlo
+      placeholder: "1. Abro la app\n2. Pulso…\n3. Veo…"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versión del panel
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: entorno
+    attributes:
+      label: macOS y dispositivo cliente
+      placeholder: "macOS 26.6, iPad Air (iOS 12.5.7)"
+  - type: textarea
+    id: registro
+    attributes:
+      label: Registro de la app
+      description: Copia las líneas relevantes del registro. Revisa que no contengan datos personales.
+      render: text

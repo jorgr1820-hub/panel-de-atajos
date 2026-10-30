@@ -1,34 +1,45 @@
 # Historial de cambios
 
-Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
+Todos los cambios relevantes del proyecto se documentan aquí.
+
+Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/);
+el proyecto usa [versionado semántico](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
-### Documentación
-- README reescrito: requisitos, inicio rápido, uso, desarrollo y solución de problemas.
-- `docs/ARQUITECTURA.md`: componentes, protocolo, referencia de la API y decisiones de diseño.
-- Política de reporte de vulnerabilidades en `SEGURIDAD.md`.
+### Agregado
+- Pruebas unitarias del servidor (22) y verificación de `firma.js` contra Python.
+- Integración continua en GitHub Actions: pruebas, compilación, verificación del sellado y escaneo de secretos.
+- Dependabot para las acciones de GitHub.
+- Archivo `VERSION` como única fuente de la versión; `compilar.sh` la aplica a la app.
 
-## 2026-10-25
+### Documentación
+- ADR 0001–0009: registro de las decisiones de arquitectura.
+- RFC 0001: análisis del acceso por internet desde seguridad, arquitectura, desarrollo y usuario.
+- `CONTRIBUTING.md`: flujo de ramas, commits convencionales, versionado y releases.
+- `docs/ROADMAP.md` y plantillas de Pull Request e issues.
+
+## [1.0.0] - 2026-10-25
+
+Primera versión estable.
 
 ### Agregado
-- Íconos de la barra de menú «23 en círculo», «23 en cuadro» y «Balón de básquet».
-- Ícono personalizado con cualquier símbolo SF o con una imagen propia.
-- Selector del ícono de la barra; la elección se guarda en las preferencias, sin recompilar.
-- Arranque al iniciar sesión (`SMAppService`); al iniciar sesión arranca solo en la barra de menú.
+- App macOS (SwiftUI) con interruptor, ícono en la barra de menú (configurable, con símbolo SF o imagen propia) y arranque al iniciar sesión.
+- Varios dispositivos con emparejamiento por QR, estado de conexión y registro de actividad en memoria.
+- Gestión de claves desde la app: crear, mostrar, rotar y revocar.
 - Renovación automática del certificado del servidor al cambiar de red o a 60 días del vencimiento.
-- Aviso cuando faltan las herramientas de línea de comandos de Apple (Python).
+- Aviso cuando faltan las herramientas de línea de comandos de Apple.
 - `pruebas.sh` con 23 comprobaciones de seguridad.
+- Documentación: README, arquitectura, modelo de amenazas.
 
 ### Seguridad
 - HTTPS con CA propia restringida a la red local (`nameConstraints`).
-- Claves y certificados en el Llavero; migración automática desde `config.json` con borrado seguro.
-- Secretos entregados al servidor por stdin en lugar de variables de entorno.
-- Verificación de integridad del servidor mediante huellas SHA-256 compiladas en la app.
+- Autenticación reto-respuesta HMAC-SHA256 con una clave por dispositivo; retos de un solo uso ligados a la IP.
+- Claves y certificados en el Llavero; secretos entregados al servidor por stdin.
 - Touch ID o contraseña para mostrar, crear o rotar claves.
+- Verificación de integridad del servidor con huellas SHA-256 compiladas en la app.
 - API de administración limitada a `127.0.0.1`.
-- Retos ligados a la IP que los pidió y límite de retos pendientes por IP.
+- Canal privado para reportar vulnerabilidades.
 
-### Inicial
-- App macOS con varios dispositivos, emparejamiento por QR, estado de conexión y registro en memoria.
-- Servidor con autenticación reto-respuesta HMAC-SHA256 y 9 acciones.
+[Sin publicar]: https://github.com/jorgr1820-hub/panel-de-atajos/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/jorgr1820-hub/panel-de-atajos/releases/tag/v1.0.0

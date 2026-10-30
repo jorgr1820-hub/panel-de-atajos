@@ -1,0 +1,55 @@
+# Integración continua: se ejecuta en cada Pull Request y en cada cambio en main.
+# Debe estar en verde para poder integrar (ver ADR 0008).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Mínimo privilegio: el workflow solo puede leer el repositorio.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pruebas:
+    name: Pruebas y compilación
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      # Acción fijada a un commit exacto (no a una etiqueta movible) para evitar
+      # ataques de cadena de suministro. Dependabot propone las actualizaciones.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Se usa el mismo Python que en producción (el de las herramientas de Apple).
+      - name: Pruebas unitarias
+        run: /usr/bin/python3 -m unittest discover -s tests -v
+
+      - name: Compilar la app
+        run: ./app/compilar.sh
+
+      - name: Verificar firma y sellado del servidor
+        run: |
+          codesign -v "Panel de atajos.app"
+          for f in server.py index.html app.js firma.js; do
+            cmp "panel/$f" "Panel de atajos.app/Contents/Resources/panel/$f"
+          done
+
+      - name: Buscar secretos en el repositorio
+        run: |
+          # Claves privadas, certificados o claves de dispositivo reales no deben versionarse.
+          # Se excluyen: tests/ (claves de prueba ficticias), la documentación, este
+          # workflow (contiene los propios patrones) y el texto de ejemplo "XXXXX-…".
+          hallazgos=$(git grep -nIE 'BEGIN (EC |RSA |OPENSSH )?PRIVATE KEY|BEGIN CERTIFICATE|[A-HJ-NP-Z2-9]{5}-[A-HJ-NP-Z2-9]{5}-[A-HJ-NP-Z2-9]{5}-[A-HJ-NP-Z2-9]{5}' \
+                      -- . ':!tests/' ':!*.md' ':!.github/workflows/' | grep -v 'XXXXX-XXXXX' || true)
+          if [ -n "$hallazgos" ]; then
+            echo "$hallazgos"
+            echo "::error::Posible secreto en el repositorio"
+            exit 1
+          fi
